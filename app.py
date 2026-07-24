@@ -60,12 +60,18 @@ st.markdown('<p class="main-title">📄 AI Resume Analyzer</p>', unsafe_allow_ht
 st.markdown('<p class="subtitle">Upload your resume to check your skills match, quality, and job fit — instantly.</p>', unsafe_allow_html=True)
 
 uploaded_file = st.file_uploader("Upload your resume (PDF or DOCX)", type=["pdf", "docx"])
+use_sample = st.button("🎯 Try with Sample Resume (No Upload Needed)")
 
-if uploaded_file is not None:
-    file_extension = os.path.splitext(uploaded_file.name)[1]
-    with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as temp_file:
-        temp_file.write(uploaded_file.read())
-        temp_path = temp_file.name
+if uploaded_file is not None or use_sample:
+    if use_sample and uploaded_file is None:
+        temp_path = "data/sample_resumes/test_resume.pdf"
+        is_temp_file = False
+    else:
+        file_extension = os.path.splitext(uploaded_file.name)[1]
+        with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as temp_file:
+            temp_file.write(uploaded_file.read())
+            temp_path = temp_file.name
+        is_temp_file = True
 
     try:
         resume_text = extract_text(temp_path)
@@ -170,4 +176,5 @@ if uploaded_file is not None:
         st.error(f"Error: {e}")
 
     finally:
-        os.remove(temp_path)
+        if is_temp_file:
+            os.remove(temp_path)
