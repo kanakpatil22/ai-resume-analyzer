@@ -59,3 +59,34 @@ def check_resume_length(resume_text):
         return "Too Long (consider trimming to 1 page)", word_count
     else:
         return "Good Length", word_count
+
+def compare_with_job_description(resume_text, job_description_text):
+    """
+    Compares resume against a job description by checking which words 
+    from the job description also appear in the resume.
+    """
+    resume_text_lower = resume_text.lower()
+    
+    common_words_to_ignore = {
+        "the", "and", "for", "with", "you", "are", "will", "our",
+        "have", "has", "this", "that", "your", "from", "who", "can",
+        "job", "work", "role", "team", "years", "experience", "skills",
+        "a", "an", "of", "in", "to", "is", "as", "on", "at", "be"
+    }
+    
+    job_words = job_description_text.lower().replace(",", " ").replace(".", " ").split()
+    unique_job_keywords = set(word for word in job_words if len(word) > 2 and word not in common_words_to_ignore)
+    
+    matched_keywords = []
+    missing_keywords = []
+    
+    for keyword in unique_job_keywords:
+        if keyword in resume_text_lower:
+            matched_keywords.append(keyword)
+        else:
+            missing_keywords.append(keyword)
+    
+    total = len(matched_keywords) + len(missing_keywords)
+    match_percentage = round((len(matched_keywords) / total) * 100, 2) if total > 0 else 0
+    
+    return matched_keywords, missing_keywords, match_percentage

@@ -2,7 +2,10 @@ import streamlit as st
 import tempfile
 import os
 from src.extractor import extract_text
-from src.analyzer import find_skills, calculate_score, check_resume_elements, check_resume_length
+from src.analyzer import (
+    find_skills, calculate_score, check_resume_elements,
+    check_resume_length, compare_with_job_description
+)
 
 st.set_page_config(page_title="AI Resume Analyzer", page_icon="📄")
 
@@ -74,6 +77,33 @@ if uploaded_file is not None:
             file_name="resume_report.txt",
             mime="text/plain"
         )
+
+        st.divider()
+
+        st.subheader("🎯 Compare With a Job Description (Optional)")
+        st.write("Paste a job description below to see how well your resume matches it.")
+
+        job_description = st.text_area("Paste Job Description Here", height=200)
+
+        if st.button("Compare with Job Description"):
+            if job_description.strip() == "":
+                st.warning("Please paste a job description first.")
+            else:
+                jd_matched, jd_missing, jd_score = compare_with_job_description(resume_text, job_description)
+
+                st.metric(label="Job Match Score", value=f"{jd_score}%")
+
+                col5, col6 = st.columns(2)
+
+                with col5:
+                    st.write("**✅ Matching Keywords:**")
+                    for word in jd_matched:
+                        st.write(f"- {word}")
+
+                with col6:
+                    st.write("**❌ Missing Keywords:**")
+                    for word in jd_missing:
+                        st.write(f"- {word}")
 
     except ValueError as e:
         st.error(f"Error: {e}")
