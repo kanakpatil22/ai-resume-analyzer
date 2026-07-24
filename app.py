@@ -6,6 +6,7 @@ from src.analyzer import (
     find_skills, calculate_score, check_resume_elements,
     check_resume_length, compare_with_job_description
 )
+from src.config import SKILL_RESOURCES
 
 st.set_page_config(
     page_title="AI Resume Analyzer",
@@ -74,11 +75,12 @@ if uploaded_file is not None or use_sample:
         is_temp_file = True
 
     try:
-        resume_text = extract_text(temp_path)
-        matched, missing = find_skills(resume_text)
-        score = calculate_score(matched, missing)
-        present_elements, missing_elements = check_resume_elements(resume_text)
-        length_status, word_count = check_resume_length(resume_text)
+        with st.spinner("🔍 Analyzing your resume..."):
+            resume_text = extract_text(temp_path)
+            matched, missing = find_skills(resume_text)
+            score = calculate_score(matched, missing)
+            present_elements, missing_elements = check_resume_elements(resume_text)
+            length_status, word_count = check_resume_length(resume_text)
 
         st.markdown("### 📊 Overview")
 
@@ -93,6 +95,13 @@ if uploaded_file is not None or use_sample:
         st.progress(int(score))
 
         st.markdown("---")
+        if score >= 70:
+            st.success("🎉 Great job! Your resume matches most of the required skills.")
+            st.balloons()
+        elif score >= 40:
+            st.info("👍 Decent match! A few more skills could boost your score.")
+        else:
+            st.warning("⚠️ Your resume is missing many key skills. Check suggestions below.")
 
         col1, col2 = st.columns(2)
         with col1:
@@ -105,7 +114,10 @@ if uploaded_file is not None or use_sample:
             st.markdown("#### ❌ Skills Missing")
             with st.container(border=True):
                 for skill in missing:
-                    st.write(f"🔴 {skill}")
+                    if skill in SKILL_RESOURCES:
+                        st.markdown(f"🔴 {skill} — [Learn here]({SKILL_RESOURCES[skill]})")
+                    else:
+                        st.write(f"🔴 {skill}")
 
         st.markdown("---")
 
