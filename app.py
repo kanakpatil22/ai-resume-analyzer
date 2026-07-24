@@ -7,12 +7,59 @@ from src.analyzer import (
     check_resume_length, compare_with_job_description
 )
 
-st.set_page_config(page_title="AI Resume Analyzer", page_icon="📄")
+st.set_page_config(
+    page_title="AI Resume Analyzer",
+    page_icon="📄",
+    layout="wide"
+)
 
-st.title("📄 AI Resume Analyzer")
-st.write("Upload your resume (PDF or DOCX) to check your skills match and score.")
+st.markdown("""
+    <style>
+    .main-title {
+        font-size: 42px;
+        font-weight: 800;
+        color: #6C63FF;
+        margin-bottom: 0px;
+    }
+    .subtitle {
+        font-size: 16px;
+        color: #666;
+        margin-bottom: 30px;
+    }
+    .stMetric {
+        background-color: #F8F7FF;
+        padding: 15px;
+        border-radius: 12px;
+        border: 1px solid #E0DFFF;
+    }
+    div[data-testid="stFileUploader"] {
+        border: 2px dashed #6C63FF;
+        border-radius: 12px;
+        padding: 10px;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-uploaded_file = st.file_uploader("Upload your resume", type=["pdf", "docx"])
+with st.sidebar:
+    st.markdown("## 📄 About This Tool")
+    st.write(
+        "This tool analyzes your resume, checks skill matches across "
+        "multiple domains, evaluates resume quality, and compares it "
+        "against any job description."
+    )
+    st.markdown("---")
+    st.markdown("### 🧭 How to Use")
+    st.write("1. Upload your resume (PDF/DOCX)")
+    st.write("2. View your score & missing skills")
+    st.write("3. Paste a job description to compare")
+    st.write("4. Download your report")
+    st.markdown("---")
+    st.caption("Built with ❤️ using Python & Streamlit")
+
+st.markdown('<p class="main-title">📄 AI Resume Analyzer</p>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">Upload your resume to check your skills match, quality, and job fit — instantly.</p>', unsafe_allow_html=True)
+
+uploaded_file = st.file_uploader("Upload your resume (PDF or DOCX)", type=["pdf", "docx"])
 
 if uploaded_file is not None:
     file_extension = os.path.splitext(uploaded_file.name)[1]
@@ -27,40 +74,52 @@ if uploaded_file is not None:
         present_elements, missing_elements = check_resume_elements(resume_text)
         length_status, word_count = check_resume_length(resume_text)
 
-        st.subheader("📊 Resume Score")
-        st.metric(label="Score", value=f"{score}%")
-        st.write(f"**Resume Length:** {length_status} ({word_count} words)")
+        st.markdown("### 📊 Overview")
+
+        m1, m2, m3 = st.columns(3)
+        with m1:
+            st.metric(label="Resume Score", value=f"{score}%")
+        with m2:
+            st.metric(label="Skills Matched", value=f"{len(matched)} / {len(matched) + len(missing)}")
+        with m3:
+            st.metric(label="Resume Length", value=length_status)
+
+        st.progress(int(score))
+
+        st.markdown("---")
 
         col1, col2 = st.columns(2)
-
         with col1:
-            st.subheader("✅ Skills Found")
-            for skill in matched:
-                st.write(f"- {skill}")
+            st.markdown("#### ✅ Skills Found")
+            with st.container(border=True):
+                for skill in matched:
+                    st.write(f"🟢 {skill}")
 
         with col2:
-            st.subheader("❌ Skills Missing")
-            for skill in missing:
-                st.write(f"- {skill}")
+            st.markdown("#### ❌ Skills Missing")
+            with st.container(border=True):
+                for skill in missing:
+                    st.write(f"🔴 {skill}")
 
-        st.divider()
+        st.markdown("---")
 
-        st.subheader("📋 Resume Quality Check")
-        st.write("Companies also look for these important elements in a resume:")
+        st.markdown("### 📋 Resume Quality Check")
+        st.caption("Companies also look for these important elements in a resume.")
 
         col3, col4 = st.columns(2)
-
         with col3:
-            st.write("**✅ Present:**")
-            for element in present_elements:
-                st.write(f"- {element}")
+            st.markdown("**✅ Present**")
+            with st.container(border=True):
+                for element in present_elements:
+                    st.write(f"🟢 {element}")
 
         with col4:
-            st.write("**⚠️ Missing (Consider Adding):**")
-            for element in missing_elements:
-                st.write(f"- {element}")
+            st.markdown("**⚠️ Missing (Consider Adding)**")
+            with st.container(border=True):
+                for element in missing_elements:
+                    st.write(f"🟡 {element}")
 
-        st.divider()
+        st.markdown("---")
 
         report_text = "===== RESUME ANALYSIS REPORT =====\n\n"
         report_text += "Skills Found:\n"
@@ -78,32 +137,34 @@ if uploaded_file is not None:
             mime="text/plain"
         )
 
-        st.divider()
+        st.markdown("---")
 
-        st.subheader("🎯 Compare With a Job Description (Optional)")
-        st.write("Paste a job description below to see how well your resume matches it.")
+        st.markdown("### 🎯 Compare With a Job Description")
+        st.caption("Paste a job description below to see how well your resume matches a specific role.")
 
-        job_description = st.text_area("Paste Job Description Here", height=200)
+        job_description = st.text_area("Paste Job Description Here", height=180, label_visibility="collapsed", placeholder="Paste job description here...")
 
-        if st.button("Compare with Job Description"):
+        if st.button("🔍 Compare with Job Description"):
             if job_description.strip() == "":
                 st.warning("Please paste a job description first.")
             else:
                 jd_matched, jd_missing, jd_score = compare_with_job_description(resume_text, job_description)
 
                 st.metric(label="Job Match Score", value=f"{jd_score}%")
+                st.progress(int(jd_score))
 
                 col5, col6 = st.columns(2)
-
                 with col5:
-                    st.write("**✅ Matching Keywords:**")
-                    for word in jd_matched:
-                        st.write(f"- {word}")
+                    st.markdown("**✅ Matching Keywords**")
+                    with st.container(border=True):
+                        for word in jd_matched:
+                            st.write(f"🟢 {word}")
 
                 with col6:
-                    st.write("**❌ Missing Keywords:**")
-                    for word in jd_missing:
-                        st.write(f"- {word}")
+                    st.markdown("**❌ Missing Keywords**")
+                    with st.container(border=True):
+                        for word in jd_missing:
+                            st.write(f"🔴 {word}")
 
     except ValueError as e:
         st.error(f"Error: {e}")
