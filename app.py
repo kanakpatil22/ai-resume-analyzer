@@ -2,7 +2,7 @@ import streamlit as st
 import tempfile
 import os
 from src.extractor import extract_text
-from src.analyzer import find_skills, calculate_score
+from src.analyzer import find_skills, calculate_score, check_resume_elements
 
 st.set_page_config(page_title="AI Resume Analyzer", page_icon="📄")
 
@@ -21,6 +21,7 @@ if uploaded_file is not None:
         resume_text = extract_text(temp_path)
         matched, missing = find_skills(resume_text)
         score = calculate_score(matched, missing)
+        present_elements, missing_elements = check_resume_elements(resume_text)
 
         st.subheader("📊 Resume Score")
         st.metric(label="Score", value=f"{score}%")
@@ -36,6 +37,23 @@ if uploaded_file is not None:
             st.subheader("❌ Skills Missing")
             for skill in missing:
                 st.write(f"- {skill}")
+
+        st.divider()
+
+        st.subheader("📋 Resume Quality Check")
+        st.write("Companies also look for these important elements in a resume:")
+
+        col3, col4 = st.columns(2)
+
+        with col3:
+            st.write("**✅ Present:**")
+            for element in present_elements:
+                st.write(f"- {element}")
+
+        with col4:
+            st.write("**⚠️ Missing (Consider Adding):**")
+            for element in missing_elements:
+                st.write(f"- {element}")
 
     except ValueError as e:
         st.error(f"Error: {e}")

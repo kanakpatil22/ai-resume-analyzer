@@ -1,4 +1,4 @@
-from src.config import SKILLS_LIST
+from src.config import SKILLS_LIST, RESUME_ELEMENTS
 
 def find_skills(resume_text):
     """
@@ -29,3 +29,20 @@ def calculate_score(matched_skills, missing_skills):
     
     score = (len(matched_skills) / total_skills) * 100
     return round(score, 2)
+
+def check_resume_elements(resume_text):
+    """
+    Checks which important resume elements/sections are present or missing.
+    """
+    resume_text_lower = resume_text.lower()
+    
+    present_elements = []
+    missing_elements = []
+    
+    for element in RESUME_ELEMENTS:
+        if element in resume_text_lower:
+            present_elements.append(element)
+        else:
+            missing_elements.append(element)
+    
+    return present_elements, missing_elements
