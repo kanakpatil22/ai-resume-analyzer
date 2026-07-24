@@ -46,3 +46,16 @@ def check_resume_elements(resume_text):
             missing_elements.append(element)
     
     return present_elements, missing_elements
+
+def check_resume_length(resume_text):
+    """
+    Estimates if resume length is appropriate based on word count.
+    """
+    word_count = len(resume_text.split())
+    
+    if word_count < 150:
+        return "Too Short", word_count
+    elif word_count > 600:
+        return "Too Long (consider trimming to 1 page)", word_count
+    else:
+        return "Good Length", word_count

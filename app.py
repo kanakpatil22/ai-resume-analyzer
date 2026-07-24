@@ -2,7 +2,7 @@ import streamlit as st
 import tempfile
 import os
 from src.extractor import extract_text
-from src.analyzer import find_skills, calculate_score, check_resume_elements
+from src.analyzer import find_skills, calculate_score, check_resume_elements, check_resume_length
 
 st.set_page_config(page_title="AI Resume Analyzer", page_icon="📄")
 
@@ -22,9 +22,11 @@ if uploaded_file is not None:
         matched, missing = find_skills(resume_text)
         score = calculate_score(matched, missing)
         present_elements, missing_elements = check_resume_elements(resume_text)
+        length_status, word_count = check_resume_length(resume_text)
 
         st.subheader("📊 Resume Score")
         st.metric(label="Score", value=f"{score}%")
+        st.write(f"**Resume Length:** {length_status} ({word_count} words)")
 
         col1, col2 = st.columns(2)
 
@@ -54,6 +56,24 @@ if uploaded_file is not None:
             st.write("**⚠️ Missing (Consider Adding):**")
             for element in missing_elements:
                 st.write(f"- {element}")
+
+        st.divider()
+
+        report_text = "===== RESUME ANALYSIS REPORT =====\n\n"
+        report_text += "Skills Found:\n"
+        for skill in matched:
+            report_text += f"- {skill}\n"
+        report_text += "\nSkills Missing:\n"
+        for skill in missing:
+            report_text += f"- {skill}\n"
+        report_text += f"\nResume Score: {score}%\n"
+
+        st.download_button(
+            label="📥 Download Report",
+            data=report_text,
+            file_name="resume_report.txt",
+            mime="text/plain"
+        )
 
     except ValueError as e:
         st.error(f"Error: {e}")
