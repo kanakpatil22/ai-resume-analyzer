@@ -1,8 +1,8 @@
 from src.config import SKILLS_LIST, RESUME_ELEMENTS
 
-def find_skills(resume_text):
+def find_skills(resume_text, skills_list=SKILLS_LIST):
     """
-    Checks which skills from SKILLS_LIST are present in the resume text.
+    Checks which skills from the given skills_list are present in the resume text.
     Returns two lists: matched skills and missing skills.
     """
     resume_text_lower = resume_text.lower()
@@ -10,7 +10,7 @@ def find_skills(resume_text):
     matched_skills = []
     missing_skills = []
     
-    for skill in SKILLS_LIST:
+    for skill in skills_list:
         if skill in resume_text_lower:
             matched_skills.append(skill)
         else:
@@ -90,3 +90,24 @@ def compare_with_job_description(resume_text, job_description_text):
     match_percentage = round((len(matched_keywords) / total) * 100, 2) if total > 0 else 0
     
     return matched_keywords, missing_keywords, match_percentage
+
+def detect_ai_phrases(resume_text):
+    """
+    Scans resume text for common AI-sounding / cliché phrases and 
+    suggests more natural alternatives. This is a heuristic check based 
+    on commonly overused phrases — not a definitive AI-detection tool.
+    """
+    from src.config import AI_PHRASES
+    
+    resume_text_lower = resume_text.lower()
+    
+    flagged_phrases = []
+    
+    for phrase, suggestion in AI_PHRASES.items():
+        if phrase in resume_text_lower:
+            flagged_phrases.append((phrase, suggestion))
+    
+    total_checked = len(AI_PHRASES)
+    ai_likelihood = round((len(flagged_phrases) / total_checked) * 100, 2) if total_checked > 0 else 0
+    
+    return flagged_phrases, ai_likelihood

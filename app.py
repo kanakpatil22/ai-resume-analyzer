@@ -4,9 +4,9 @@ import os
 from src.extractor import extract_text
 from src.analyzer import (
     find_skills, calculate_score, check_resume_elements,
-    check_resume_length, compare_with_job_description
+    check_resume_length, compare_with_job_description, detect_ai_phrases
 )
-from src.config import SKILL_RESOURCES
+from src.config import SKILL_RESOURCES, DOMAINS
 
 st.set_page_config(
     page_title="AI Resume Analyzer",
@@ -44,21 +44,24 @@ st.markdown("""
 with st.sidebar:
     st.markdown("## 📄 About This Tool")
     st.write(
-        "This tool analyzes your resume, checks skill matches across "
-        "multiple domains, evaluates resume quality, and compares it "
-        "against any job description."
+        "This tool analyzes your resume, checks skill matches for your "
+        "specific domain, evaluates resume quality, checks for AI-sounding "
+        "phrases, and compares it against any job description."
     )
     st.markdown("---")
     st.markdown("### 🧭 How to Use")
-    st.write("1. Upload your resume (PDF/DOCX)")
-    st.write("2. View your score & missing skills")
-    st.write("3. Paste a job description to compare")
-    st.write("4. Download your report")
+    st.write("1. Select your domain/field")
+    st.write("2. Upload your resume (PDF/DOCX)")
+    st.write("3. View your score & missing skills")
+    st.write("4. Paste a job description to compare")
+    st.write("5. Download your report")
     st.markdown("---")
     st.caption("Built with ❤️ using Python & Streamlit")
 
 st.markdown('<p class="main-title">📄 AI Resume Analyzer</p>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">Upload your resume to check your skills match, quality, and job fit — instantly.</p>', unsafe_allow_html=True)
+
+selected_domain = st.selectbox("🎓 Select Your Domain/Field", list(DOMAINS.keys()))
 
 uploaded_file = st.file_uploader("Upload your resume (PDF or DOCX)", type=["pdf", "docx"])
 use_sample = st.button("🎯 Try with Sample Resume (No Upload Needed)")
@@ -77,12 +80,14 @@ if uploaded_file is not None or use_sample:
     try:
         with st.spinner("🔍 Analyzing your resume..."):
             resume_text = extract_text(temp_path)
-            matched, missing = find_skills(resume_text)
+            matched, missing = find_skills(resume_text, DOMAINS[selected_domain])
             score = calculate_score(matched, missing)
             present_elements, missing_elements = check_resume_elements(resume_text)
             length_status, word_count = check_resume_length(resume_text)
+            flagged_phrases, ai_likelihood = detect_ai_phrases(resume_text)
 
         st.markdown("### 📊 Overview")
+        st.caption(f"Showing results for: **{selected_domain}**")
 
         m1, m2, m3 = st.columns(3)
         with m1:
@@ -96,12 +101,12 @@ if uploaded_file is not None or use_sample:
 
         st.markdown("---")
         if score >= 70:
-            st.success("🎉 Great job! Your resume matches most of the required skills.")
+            st.success("🎉 Great job! Your resume matches most of the required skills for this domain.")
             st.balloons()
         elif score >= 40:
             st.info("👍 Decent match! A few more skills could boost your score.")
         else:
-            st.warning("⚠️ Your resume is missing many key skills. Check suggestions below.")
+            st.warning("⚠️ Your resume is missing many key skills for this domain. Check suggestions below.")
 
         col1, col2 = st.columns(2)
         with col1:
@@ -118,6 +123,20 @@ if uploaded_file is not None or use_sample:
                         st.markdown(f"🔴 {skill} — [Learn here]({SKILL_RESOURCES[skill]})")
                     else:
                         st.write(f"🔴 {skill}")
+
+        st.markdown("---")
+
+        st.markdown("### 🤖 AI-Sounding Phrase Check")
+        st.caption("This checks for common overused/robotic phrases often found in AI-written resumes. It is not a definitive AI-detection tool.")
+
+        st.metric(label="AI-Sounding Phrase Score", value=f"{ai_likelihood}%")
+
+        if flagged_phrases:
+            with st.container(border=True):
+                for phrase, suggestion in flagged_phrases:
+                    st.markdown(f"**🔸 \"{phrase}\"** — {suggestion}")
+        else:
+            st.success("No common AI-sounding phrases detected!")
 
         st.markdown("---")
 
@@ -140,6 +159,7 @@ if uploaded_file is not None or use_sample:
         st.markdown("---")
 
         report_text = "===== RESUME ANALYSIS REPORT =====\n\n"
+        report_text += f"Domain: {selected_domain}\n\n"
         report_text += "Skills Found:\n"
         for skill in matched:
             report_text += f"- {skill}\n"
