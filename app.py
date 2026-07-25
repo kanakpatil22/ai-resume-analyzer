@@ -4,7 +4,8 @@ import os
 from src.extractor import extract_text
 from src.analyzer import (
     find_skills, calculate_score, check_resume_elements,
-    check_resume_length, compare_with_job_description, detect_ai_phrases
+    check_resume_length, compare_with_job_description, detect_ai_phrases,
+    generate_improvement_suggestions
 )
 from src.config import SKILL_RESOURCES, DOMAINS
 
@@ -85,6 +86,7 @@ if uploaded_file is not None or use_sample:
             present_elements, missing_elements = check_resume_elements(resume_text)
             length_status, word_count = check_resume_length(resume_text)
             flagged_phrases, ai_likelihood = detect_ai_phrases(resume_text)
+            suggestions, priority_message = generate_improvement_suggestions(missing, missing_elements, score)
 
         st.markdown("### 📊 Overview")
         st.caption(f"Showing results for: **{selected_domain}**")
@@ -174,6 +176,14 @@ if uploaded_file is not None or use_sample:
             file_name="resume_report.txt",
             mime="text/plain"
         )
+
+        st.markdown("---")
+        st.markdown("### 💡 How to Improve Your Resume")
+        st.info(priority_message)
+
+        with st.container(border=True):
+            for suggestion in suggestions:
+                st.write(f"✅ {suggestion}")
 
         st.markdown("---")
 

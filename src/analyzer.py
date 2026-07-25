@@ -1,4 +1,4 @@
-from src.config import SKILLS_LIST, RESUME_ELEMENTS
+from src.config import SKILLS_LIST, RESUME_ELEMENTS, AI_PHRASES
 
 def find_skills(resume_text, skills_list=SKILLS_LIST):
     """
@@ -97,7 +97,7 @@ def detect_ai_phrases(resume_text):
     suggests more natural alternatives. This is a heuristic check based 
     on commonly overused phrases — not a definitive AI-detection tool.
     """
-    from src.config import AI_PHRASES
+    
     
     resume_text_lower = resume_text.lower()
     
@@ -111,3 +111,46 @@ def detect_ai_phrases(resume_text):
     ai_likelihood = round((len(flagged_phrases) / total_checked) * 100, 2) if total_checked > 0 else 0
     
     return flagged_phrases, ai_likelihood
+
+def generate_improvement_suggestions(missing_skills, missing_elements, score):
+    """
+    Generates a prioritized, actionable list of suggestions to improve 
+    the resume based on missing skills and missing elements.
+    """
+    suggestions = []
+    
+    if missing_skills:
+        top_skills = missing_skills[:5]
+        skills_text = ", ".join(top_skills)
+        suggestions.append(
+            f"Add these skills if you have them: {skills_text}. "
+            f"This can directly boost your score."
+        )
+    
+    element_messages = {
+        "internship": "Add any internship experience, even short-term or unpaid ones.",
+        "certification": "List any certifications you've completed (even free online courses count).",
+        "certified": "List any certifications you've completed (even free online courses count).",
+        "project": "Include 2-3 projects with a short description of what you built and the tools used.",
+        "achievement": "Mention any achievements or awards, academic or extracurricular.",
+        "award": "Mention any achievements or awards, academic or extracurricular.",
+        "linkedin": "Add your LinkedIn profile link — recruiters often check it.",
+        "github": "Add your GitHub link if you have coding projects to showcase.",
+        "portfolio": "Add a portfolio link if you have one (especially for design/dev roles).",
+        "summary": "Add a 2-3 line summary at the top describing who you are professionally.",
+        "objective": "Add a 2-3 line summary at the top describing who you are professionally.",
+        "volunteer": "Mention any volunteer work — it shows initiative and teamwork.",
+    }
+    
+    for element in missing_elements:
+        if element in element_messages:
+            suggestions.append(element_messages[element])
+    
+    if score < 40:
+        priority_message = "Priority: Focus on adding the missing skills above first — they have the biggest impact on your score."
+    elif score < 70:
+        priority_message = "Priority: You're doing well! Adding a couple more skills and missing sections will push your score higher."
+    else:
+        priority_message = "Priority: Your resume is strong. Focus on polishing wording and adding any remaining missing sections."
+    
+    return suggestions, priority_message
